@@ -1,0 +1,8 @@
+.vscode
+node_modules/
+dist/
+yarn.lock
+*error.log
+package-lock.json*
+lerna*.log
+.DS_STORE/

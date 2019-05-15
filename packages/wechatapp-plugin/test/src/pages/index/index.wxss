@@ -1,0 +1,26 @@
+@import "../../app.wxss";
+.userinfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.userinfo .test{
+    width:100%;
+}
+.userinfo-avatar {
+    width: 128rpx;
+    height: 128rpx;
+    margin: 20rpx;
+    border-radius: 50%;
+}
+  
+.userinfo-nickname {
+    color: #aaa;
+}
+  
+.usermotto {
+    margin-top: 200px;
+}
+.bg{
+    background-image: url(../../img/webpack-logo.jpeg?network=true);
+  }

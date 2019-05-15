@@ -1,0 +1,6 @@
+{
+  "component": true,
+  "usingComponents":{
+    "test-component":"../../external-components/test-component/test-component"
+  }
+}
