@@ -43,16 +43,12 @@ class BaseDevModule {
       this.attachTemplatePlugin(compilation, params);
       this.onCompilation(compilation, params);
     };
-    if (env.isHook) {
-      this.compiler.hooks.compilation.tap(
-        `${PLUGIN_NAME}_compilation`,
-        handleCompilation
-      );
-    } else {
-      this.compiler.plugin("compilation", handleCompilation);
-    }
+    this.compiler.hooks.compilation.tap(
+      `${PLUGIN_NAME}_compilation`,
+      handleCompilation
+    );
 
-    let handleEmit = this.wrapGen(function*(compilation, cb) {
+    let handleEmit = async (compilation, cb) => {
       //清除掉assets.js相关文件
       try {
         Object.keys(compilation.assets)
@@ -74,21 +70,17 @@ class BaseDevModule {
           });
         _.isFunction(this.pluginOption.onEmitAssets) &&
           this.pluginOption.onEmitAssets.call(this, compilation.assets);
-        yield this.emitAssets(compilation);
+        await this.emitAssets(compilation);
         cb();
       } catch (e) {
         console.error(
           chalk.red(`[Error] emit assets Error: ${e},trace: ${e.stack}`)
         );
       }
-    });
-    if (env.isHook) {
-      this.compiler.hooks.emit.tapAsync(`${PLUGIN_NAME}_emit`, handleEmit);
-    } else {
-      this.compiler.plugin("emit", handleEmit);
-    }
+    };
+    this.compiler.hooks.emit.tapAsync(`${PLUGIN_NAME}_emit`, handleEmit);
   }
-  *emitAssets(compilation: webpack.compilation.Compilation) {}
+  async emitAssets(compilation: webpack.compilation.Compilation) {}
   onCompilation(compilation: webpack.compilation.Compilation, params) {}
   getProjectRoot() {
     return "";
@@ -142,29 +134,7 @@ class BaseDevModule {
       extraAssets,
       assetsName
     );
-    if (env.isHook) {
-      multiEntryPlugin.apply(this.compiler);
-    } else {
-      this.compiler.apply(multiEntryPlugin);
-    }
-  }
-  *appendAsset(compilation) {
-    //TODO:暂时没有用
-    let { assets } = compilation;
-    let extraAssets = glob.sync("**/*.!(js)", {
-      cwd: this.getProjectRoot()
-    });
-    if (Array.isArray(extraAssets)) {
-      yield extraAssets.map(name => {
-        return function*() {
-          try {
-            assets[name] = new RawSource(
-              yield fs.readFile(path.join(this.getProjectRoot(), name), "utf-8")
-            );
-          } catch (e) {}
-        }.bind(this);
-      });
-    }
+    multiEntryPlugin.apply(this.compiler);
   }
   wrapGen(func) {
     if (typeof func !== "function")
@@ -187,80 +157,51 @@ class BaseDevModule {
    */
   appendCommonPlugin(name: string) {
     //提取出common chunk
-    if (env.isHook) {
-      // console.warn(
-      //     chalk.yellowBright(`[warn] - [appendCommonPlugin] is deprecated when webpack >=4`)
-      // );
-      //webpack4 处理为增加splitChunks配置
+    // console.warn(
+    //     chalk.yellowBright(`[warn] - [appendCommonPlugin] is deprecated when webpack >=4`)
+    // );
+    //webpack4 处理为增加splitChunks配置
 
-      this.compiler.options.optimization = _.merge(
-        {
-          runtimeChunk: {
-            name: `${name}_runtime`
-          } as webpack.Options.RuntimeChunkOptions,
-          splitChunks: {
-            cacheGroups: {
-              [name]: {
-                chunks: "initial",
-                reuseExistingChunk: true,
-                name,
-                priority: -1,
-                test: _.isFunction(this.pluginOption.minChunks)
-                  ? this.pluginOption.minChunks
-                  : (module, count) => {
-                      if (module.resource) {
-                        let ext = path.extname(module.resource);
-                        if (ext) {
-                          ext = ext.replace(/^\./, "");
-                          if (
-                            (<any>this.pluginOption).originExt.indexOf(ext) > -1
-                          ) {
-                            return (
-                              this.getEntryResource().indexOf(
-                                module.resource
-                              ) == -1
-                            );
-                          }
+    this.compiler.options.optimization = _.merge(
+      {
+        runtimeChunk: {
+          name: `${name}_runtime`
+        } as webpack.Options.RuntimeChunkOptions,
+        splitChunks: {
+          cacheGroups: {
+            [name]: {
+              chunks: "initial",
+              reuseExistingChunk: true,
+              name,
+              priority: -1,
+              test: _.isFunction(this.pluginOption.minChunks)
+                ? this.pluginOption.minChunks
+                : (module, count) => {
+                    if (module.resource) {
+                      let ext = path.extname(module.resource);
+                      if (ext) {
+                        ext = ext.replace(/^\./, "");
+                        if (
+                          (<any>this.pluginOption).originExt.indexOf(ext) > -1
+                        ) {
+                          return (
+                            this.getEntryResource().indexOf(module.resource) ==
+                            -1
+                          );
                         }
-                        // path.parse(module.resource).ext == this.pluginOption.ext
                       }
-                      return count >= 2;
+                      // path.parse(module.resource).ext == this.pluginOption.ext
                     }
-              } as webpack.Options.CacheGroupsOptions
-            }
+                    return count >= 2;
+                  }
+            } as webpack.Options.CacheGroupsOptions
           }
-        },
-        this.compiler.options.optimization || {}
-      );
-      return;
-    }
-    //@ts-ignore
-    const CommonsChunkPlugin = webpack.optimize.CommonsChunkPlugin;
-    let regexp = globToRegexp(`*${this.pluginOption.ext}`, {
-      extended: true,
-      globstar: true
-    });
-    let minChunks = _.isFunction(this.pluginOption.minChunks)
-      ? this.pluginOption.minChunks
-      : (module, count) => {
-          if (module.resource) {
-            let ext = path.extname(module.resource);
-            if (ext) {
-              ext = ext.replace(/^\./, "");
-              if ((<any>this.pluginOption).originExt.indexOf(ext) > -1) {
-                return this.getEntryResource().indexOf(module.resource) == -1;
-              }
-            }
-            // path.parse(module.resource).ext == this.pluginOption.ext
-          }
-          return count >= 2;
-        };
-    this.compiler.apply(
-      new CommonsChunkPlugin({
-        name,
-        minChunks
-      })
+        }
+      },
+      this.compiler.options.optimization || {}
     );
+    return;
+    //@ts-ignore
   }
   getCommonRelativePath(commonName, targetFile) {
     let commonPath = path.join(this.distPath, `${commonName}.js`);
@@ -273,11 +214,7 @@ class BaseDevModule {
     return "";
   }
   getRuntimeName(): string {
-    if (env.isHook) {
-      return `${this.getCommonName()}_runtime`;
-    } else {
-      this.getCommonName();
-    }
+    return `${this.getCommonName()}_runtime`;
   }
   /**
    * @description 获取真正的小程序的入口
@@ -349,17 +286,10 @@ class BaseDevModule {
       concatSource.add(source);
       return concatSource;
     };
-    if (env.isHook) {
-      (compilation.chunkTemplate as any).hooks.render.tap(
-        `${PLUGIN_NAME}_render`,
-        handleWebpack4ChunkTemplateRender
-      );
-    } else {
-      compilation.chunkTemplate.plugin(
-        "render",
-        handleWebpack3ChunkTemplateRender
-      );
-    }
+    (compilation.chunkTemplate as any).hooks.render.tap(
+      `${PLUGIN_NAME}_render`,
+      handleWebpack4ChunkTemplateRender
+    );
 
     let handleRuntimeRender = (source, chunk) => {
       let { name } = chunk;
@@ -374,14 +304,10 @@ class BaseDevModule {
       );
       return newSource;
     };
-    if (env.isHook) {
-      (compilation.mainTemplate as any).hooks.render.tap(
-        `${PLUGIN_NAME}_bootstrap`,
-        handleRuntimeRender
-      );
-    } else {
-      compilation.mainTemplate.plugin("bootstrap", handleRuntimeRender);
-    }
+    (compilation.mainTemplate as any).hooks.render.tap(
+      `${PLUGIN_NAME}_bootstrap`,
+      handleRuntimeRender
+    );
   }
 }
 export default BaseDevModule;

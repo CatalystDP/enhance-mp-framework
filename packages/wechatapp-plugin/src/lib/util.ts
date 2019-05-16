@@ -5,8 +5,7 @@ export default {
     let obj = {
       loader: "file-loader",
       options: {
-        useRelativePath: true,
-        name: `[name].${ext}`
+        name: `[path][name].${ext}`
       }
     };
     if (asString) {

@@ -11,7 +11,8 @@
     "build-debug": "rimraf ./dist && tsc --sourceMap --watch",
     "prebuild": "prettier --write \"./src/**/*.ts\"",
     "build": "rimraf ./dist && tsc",
-    "test": "cd test && cross-env DEBUG=wechatapp-plugin ../../../node_modules/.bin/webpack --display-modules",
+    "test": "cd test && rimraf ./dist && cross-env DEBUG=wechatapp-plugin ../../../node_modules/.bin/webpack --display-modules",
+    "test:default":"yarn test --config webpack.default.config.js",
     "test-plugin": "cd test-plugin && ../../../node_modules/.bin/webpack --display-modules",
     "publish:dev": "npm publish --tag dev",
     "publish": "npm publish"
