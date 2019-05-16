@@ -78,26 +78,26 @@ let webpackConfig = {
       {
         test: /\.(png|jpeg)$/,
         use: [
-          // WechatAppPlugin.util.fileLoader(),
-          {
-            loader: WechatAppPlugin.loaders.assetsLoader,
-            options: {
-              publicPath: "https://www.testassets.com/assets",
-              limit: 4 * 1024, //限制8k以上不能转base64
-              fallback: "file-loader",
-              fallbackOptions: {
-                name: "[path][name].[ext]"
-              }
-            }
-          }
+          WechatAppPlugin.util.fileLoader(),
+          // {
+          //   loader: WechatAppPlugin.loaders.assetsLoader,
+          //   options: {
+          //     publicPath: "https://www.testassets.com/assets",
+          //     limit: 4 * 1024, //限制8k以上不能转base64
+          //     fallback: "file-loader",
+          //     fallbackOptions: {
+          //       name: "[path][name].[ext]"
+          //     }
+          //   }
+          // }
         ]
+      },
+      {
+      	test: /\.(json)$/,
+      	use: [
+      		WechatAppPlugin.util.fileLoader()
+      	]
       }
-      // {
-      // 	test: /\.(json)$/,
-      // 	use: [
-      // 		WechatAppPlugin.util.fileLoader()
-      // 	]
-      // }
     ]
   },
   plugins: [

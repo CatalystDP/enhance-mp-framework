@@ -317,6 +317,7 @@ class BaseDevModule {
       let concatSource = new ConcatSource("");
       let idx = -1;
       let chunkGroup = _compilation.chunkGroups.find(item => {
+        //找到chunkGroups下面包含当前chunk的chunkGroup
         let hasChunk =
           Array.isArray(item.chunks) &&
           item.chunks.some((_chunk, index) => {
