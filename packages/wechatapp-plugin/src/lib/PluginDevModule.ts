@@ -1,21 +1,19 @@
-import BaseDevModule from "./BaseDevModule";
-import IPluginOptions from "../interfaces/IPluginOptions";
-import env from "../tools/env";
-import { PLUGIN_NAME } from "../const";
-const path = require("path");
-const _ = require("lodash");
-const fs = require("fs-extra");
-const glob = require("glob");
-const acorn = require("acorn");
-const { ConcatSource } = require("webpack-sources");
+import BaseDevModule from './BaseDevModule';
+import IPluginOptions from '../interfaces/IPluginOptions';
+import { PLUGIN_NAME } from '../const';
+import * as path from 'path';
+import * as _ from 'lodash';
+import * as fs from 'fs-extra';
+import * as glob from 'glob';
+import { ConcatSource } from 'webpack-sources';
 class PluginDevModule extends BaseDevModule {
-  constructor(compiler, pluginOption: IPluginOptions) {
+  public constructor(compiler, pluginOption: IPluginOptions) {
     super(compiler, pluginOption);
     this.attachPoint();
   }
-  attachPoint() {
+  public attachPoint(): void {
     super.attachPoint();
-    let handleEnviroment = () => {
+    let handleEnviroment = (): void => {
       this.resolveEntry();
       this.appendCommonPlugin(this.getCommonName());
     };
@@ -24,28 +22,32 @@ class PluginDevModule extends BaseDevModule {
       handleEnviroment
     );
   }
-  resolveEntry() {
+  public resolveEntry(): void {
     let entry: any = this.compiler.options.entry;
-    if (!_.isObject(entry)) throw new Error("entry config must an Object");
-    if (!entry.index) throw new Error('entry name must be "plugin"');
-    this.entryResource = [entry.index];
-    this.projectRoot = path.dirname(entry.index);
+    if (!_.isObject(entry)) throw new Error('entry config must an Object');
+    if (!(entry as any).index) throw new Error('entry name must be "plugin"');
+    this.entryResource = [(entry as any).index];
+    this.projectRoot = path.dirname((entry as any).index);
     let componentEntry = this.getComponentEntry();
     _.extend(entry, componentEntry);
     this.addAssetsEntry();
     _.isFunction(this.pluginOption.onAdditionalEntry) &&
       _.extend(entry, this.pluginOption.onAdditionalEntry.call(this));
-    _.forIn(entry, val => {
-      this.entryResource.push(val);
-    });
+    _.forIn(
+      entry,
+      (val): void => {
+        this.entryResource.push(val);
+      }
+    );
+    this.resolveExternal(entry);
   }
-  getEntryResource() {
+  public getEntryResource(): string[] {
     return this.entryResource;
   }
-  async resolveProjectConfigJson() {
+  public async resolveProjectConfigJson(): Promise<void> {
     let parentPathToPlugin = path.dirname(this.projectRoot);
     let projectConfig = fs.readJSONSync(
-      path.join(parentPathToPlugin, "project.config.json")
+      path.join(parentPathToPlugin, 'project.config.json')
     );
     let { miniprogramRoot, pluginRoot } = projectConfig;
     // miniprogramRoot = miniprogramRoot.replace(//);
@@ -53,10 +55,10 @@ class PluginDevModule extends BaseDevModule {
       path.parse(miniprogramRoot).name,
       path.parse(pluginRoot).name
     ];
-    let parentAssets = glob.sync("**/*.*", {
+    let parentAssets = glob.sync('**/*.*', {
       cwd: parentPathToPlugin,
       // ignore: `**/*${this.pluginOption.ext}`,
-      ignore: [`+(${ignorePath.join("|")})/**/*.*`]
+      ignore: [`+(${ignorePath.join('|')})/**/*.*`]
       // realpath: true
     });
     let {
@@ -64,23 +66,25 @@ class PluginDevModule extends BaseDevModule {
     } = this.compiler.options;
     outputPath = path.dirname(outputPath);
     let promises = [];
-    parentAssets.forEach(asset => {
-      promises.push(
-        fs.copy(
-          path.join(parentPathToPlugin, asset),
-          path.join(outputPath, asset)
-        )
-      );
-    });
+    parentAssets.forEach(
+      (asset): void => {
+        promises.push(
+          fs.copy(
+            path.join(parentPathToPlugin, asset),
+            path.join(outputPath, asset)
+          )
+        );
+      }
+    );
     await Promise.all(promises);
   }
-  async emitAssets(compilation) {
+  public async emitAssets(compilation): Promise<void> {
     await this.resolveProjectConfigJson();
     this.injectPluginEntry(compilation);
   }
-  injectPluginEntry(compilation) {
+  public injectPluginEntry(compilation): void {
     let { assets } = compilation;
-    let key = "index.js"; //插件入口的key
+    let key = 'index.js'; //插件入口的key
     let pluginMainFile = assets[key];
     if (!pluginMainFile) return;
     let concatSource = new ConcatSource(
@@ -92,10 +96,10 @@ class PluginDevModule extends BaseDevModule {
     );
     assets[key] = concatSource;
   }
-  getProjectRoot() {
-    return this.projectRoot || "";
+  public getProjectRoot(): string {
+    return this.projectRoot || '';
   }
-  getCommonName() {
+  public getCommonName(): string {
     return this.pluginOption.pluginCommonName;
   }
 }

@@ -1,4 +1,8 @@
-const log = require("debug")("wechatapp-plugin");
-export const debugLog = (tag: string, context: string, ...args: string[]) => {
-    log(`[${tag}] - [${context}]`, ...args);
+const log = require('debug')('wechatapp-plugin');
+export const debugLog = (
+  tag: string,
+  context: string,
+  ...args: string[]
+): void => {
+  log(`[${tag}] - [${context}]`, ...args);
 };

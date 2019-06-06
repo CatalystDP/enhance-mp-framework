@@ -1,3 +1,2 @@
-const env = {
-};
+const env = {};
 export default env;

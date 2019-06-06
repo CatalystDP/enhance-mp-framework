@@ -1,9 +1,8 @@
-import * as path from "path";
-import * as querystring from "querystring";
+import * as querystring from 'querystring';
 export default {
-  fileLoader(ext = "[ext]", asString = false): any {
+  fileLoader(ext = '[ext]', asString = false): any {
     let obj = {
-      loader: "file-loader",
+      loader: 'file-loader',
       options: {
         name: `[path][name].${ext}`
       }
@@ -13,13 +12,13 @@ export default {
     }
     return obj;
   },
-  getPackageJson() {
-    return require("../../package.json");
+  getPackageJson(): { [key: string]: any } {
+    return require('../../package.json');
   },
   /**
    * @returns {string}
    */
-  rndNumber() {
+  rndNumber(): string {
     return Math.random()
       .toString()
       .slice(2);

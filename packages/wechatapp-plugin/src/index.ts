@@ -1,28 +1,27 @@
-import * as fs from "fs-extra";
-import * as path from "path";
-import * as _ from "lodash";
-import util from "./lib/util";
-import IPluginOptions from "./interfaces/IPluginOptions";
-import webpack = require("webpack");
-import { PLUGIN_NAME } from "./const";
-import env from "./tools/env";
+import * as path from 'path';
+import * as _ from 'lodash';
+import util from './lib/util';
+import IPluginOptions from './interfaces/IPluginOptions';
+import webpack = require('webpack');
+import { PLUGIN_NAME } from './const';
 class WechatAppPlugin {
   public static mode = {
-    APP: "app",
-    PLUGIN: "plugin",
-    CUSTOM: "custom"
+    APP: 'app',
+    PLUGIN: 'plugin',
+    CUSTOM: 'custom'
   };
   public static wrapStyleLoaderConfig = function(
     loaders = [],
+    /* eslint-disable-next-line */
     loaderConfig: {
-      "extract-loader": any;
-    } = <any>{}
-  ) {
+      'extract-loader': any;
+    } = {} as any
+  ): webpack.Loader[] {
     return [
-      util.fileLoader("wxss"),
+      util.fileLoader('wxss'),
       WechatAppPlugin.loaders.extractLoader,
       {
-        loader: "css-loader",
+        loader: 'css-loader',
         options: {
           import: false
         }
@@ -32,27 +31,27 @@ class WechatAppPlugin {
   public static wrapViewLoaderConfig = function(
     loaders = [],
     loaderConfig: {
-      "extract-loader": any;
-      "html-loader": any;
-    } = <any>{}
-  ) {
+      'extract-loader': any;
+      'html-loader': any;
+    } = {} as any
+  ): any[] {
     return [
-      WechatAppPlugin.util.fileLoader("wxml"),
+      WechatAppPlugin.util.fileLoader('wxml'),
       WechatAppPlugin.loaders.extractLoader,
       {
-        loader: "html-loader",
+        loader: 'html-loader',
         options: Object.assign(
           {
-            attrs: ["image:src"]
+            attrs: ['image:src']
           },
-          loaderConfig["html-loader"] || {}
+          loaderConfig['html-loader'] || {}
         )
       }
     ].concat(loaders);
   };
   public static loaders = {
-    assetsLoader: `${require.resolve("./loaders/assetsLoader")}`,
-    extractLoader: require.resolve("./loaders/extractLoader")
+    assetsLoader: `${require.resolve('./loaders/assetsLoader')}`,
+    extractLoader: require.resolve('./loaders/extractLoader')
   };
   public static util = util;
   private _route: {
@@ -74,81 +73,92 @@ class WechatAppPlugin {
    *    @param {Function} [option.onAdditionalAssets ] 额外的资源需要作为入口，需要返回一个数组
    *    @param {Function} [option.onAdditionalEntry] 额外的入口js，需要返回一个对象
    */
-  constructor(option: IPluginOptions = {}) {
+  public constructor(option: IPluginOptions = {}) {
     this.option = _.defaults(option || {}, {
       devMode: WechatAppPlugin.mode.APP,
       // ext: '.?(js|ts)',
-      appCommonName: "appCommon",
-      jsonpFuncName: "wechatAppJsonp",
-      pluginCommonName: "pluginCommon",
-      customCommonName: "customCommon",
-      pluginExportName: "PLUGIN_EXPORT",
+      appCommonName: 'appCommon',
+      jsonpFuncName: 'wechatAppJsonp',
+      pluginCommonName: 'pluginCommon',
+      customCommonName: 'customCommon',
+      pluginExportName: 'PLUGIN_EXPORT',
       customFiles: [],
       minChunks: null,
-      useDefaultLoader: true,
+      useDefaultLoader: false,
       originExt: []
     });
     let defaultOpt = {
-      componentsPath: ["components"],
+      componentsPath: ['components'],
       fileLoaderExt: [],
-      assetsExt: ["wxml", "json", "wxss"],
-      ext: ["js", "ts"]
+      assetsExt: ['wxml', 'json', 'wxss'],
+      ext: ['js', 'ts']
       // picLoaderExt: ['png'],
       // styleLoaderExt: ['wxss']
     };
-    _.forIn(defaultOpt, (value, key) => {
-      let val: any[];
-      if (Array.isArray(value)) {
-        //处理选项为数组的情况
-        val = (<any[]>value).concat(
-          Array.isArray(this.option[key]) ? this.option[key] : []
-        );
+    _.forIn(
+      defaultOpt,
+      (value, key): void => {
+        let val: any[];
+        if (Array.isArray(value)) {
+          //处理选项为数组的情况
+          val = (value as any[]).concat(
+            Array.isArray(this.option[key]) ? this.option[key] : []
+          );
+        }
+        this.option[key] = val;
       }
-      this.option[key] = val;
-    });
-    (<any>this.option).originExt = this.option.ext; //记录原始的ext
-    (<any>this.option.ext) = `.?(${this.option.ext.join("|")})`;
+    );
+    (this.option as any).originExt = this.option.ext; //记录原始的ext
+    (this.option.ext as any) = `.?(${this.option.ext.join('|')})`;
     this._route = {};
-    _.forIn(moduleRoute, (value, key) => {
-      this._route[key] = compiler => {
-        this.createDevModule(compiler, value);
-      };
-    });
+    _.forIn(
+      moduleRoute, //eslint-disable-line
+      (value, key): void => {
+        this._route[key] = (compiler): void => {
+          this.createDevModule(compiler, value);
+        };
+      }
+    );
   }
 
   //设置资源
-  addLoaders(compiler) {
+  protected addLoaders(compiler): void {
     let { module } = compiler.options;
     module.rules = module.rules || [];
     module.rules.push({
       test: new RegExp(
-        `\\.(wxss|wxml|json|${this.option.fileLoaderExt.join("|")})$`
+        `\\.(wxss|wxml|${this.option.fileLoaderExt.join('|')})$`
       ),
       use: [util.fileLoader()]
     }); //增加file-loader 用来处理非js资源的复制
+    module.rules.push({
+      type: 'javascript/auto',
+      test: /\.json$/,
+      use: [util.fileLoader()]
+    });
   }
-  createDevModule(compiler, name) {
-    let Module = require(path.join(__dirname, "lib", name)).default;
+  protected createDevModule(compiler, name): void {
+    let Module = require(path.join(__dirname, 'lib', name)).default;
     new Module(compiler, this.option);
   }
-  apply(compiler: webpack.Compiler) {
-    let handleEnvironment = () => {
-      compiler.options && (compiler.options.target = "web");
+  public apply(compiler: webpack.Compiler): void {
+    let handleEnvironment = (): void => {
+      compiler.options && (compiler.options.target = 'web');
     };
     compiler.hooks.environment.tap(
       `${PLUGIN_NAME}_environment`,
       handleEnvironment
     );
     this.option.useDefaultLoader && this.addLoaders(compiler);
-    typeof this._route[this.option.devMode] === "function" &&
+    typeof this._route[this.option.devMode] === 'function' &&
       this._route[this.option.devMode](compiler);
     //根据开发模式路由到不同模块
   }
 }
 const moduleRoute = {
-  [WechatAppPlugin.mode.APP]: "AppDevModule",
-  [WechatAppPlugin.mode.PLUGIN]: "PluginDevModule",
-  [WechatAppPlugin.mode.CUSTOM]: "CustomDevModule"
+  [WechatAppPlugin.mode.APP]: 'AppDevModule',
+  [WechatAppPlugin.mode.PLUGIN]: 'PluginDevModule',
+  [WechatAppPlugin.mode.CUSTOM]: 'CustomDevModule'
 };
 /**
  * @description //包装样式处理，例如使用了less作为样式处理把该函数的返回放到module.rules 的use字段上

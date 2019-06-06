@@ -1,1 +1,1 @@
-export const PLUGIN_NAME = 'wechatappPlugin'
+export const PLUGIN_NAME = 'wechatappPlugin';

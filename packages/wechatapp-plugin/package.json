@@ -7,12 +7,13 @@
     "test": "test"
   },
   "scripts": {
+    "format": "prettier ./src/**/*{.ts,.js} --write",
     "prepack": "npm run build",
-    "build-debug": "rimraf ./dist && tsc --sourceMap --watch",
+    "build-debug": "rimraf ./dist/**/*.* && tsc --sourceMap --watch",
     "prebuild": "prettier --write \"./src/**/*.ts\"",
-    "build": "rimraf ./dist && tsc",
+    "build": "rimraf ./dist/**/*.* && tsc",
     "test": "cd test && rimraf ./dist && cross-env DEBUG=wechatapp-plugin ../../../node_modules/.bin/webpack --display-modules",
-    "test:default":"yarn test --config webpack.default.config.js",
+    "test:default": "yarn test --config webpack.default.config.js",
     "test-plugin": "cd test-plugin && ../../../node_modules/.bin/webpack --display-modules",
     "publish:dev": "npm publish --tag dev",
     "publish": "npm publish"
@@ -70,7 +71,6 @@
     "@types/mime": "^2.0.0",
     "@types/webpack": "^4.4.25",
     "less-loader": "^4.1.0",
-    "prettier": "^1.16.4",
     "speed-measure-webpack-plugin": "^1.2.3",
     "webpack-bundle-analyzer": "^2.13.1"
   }

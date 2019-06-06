@@ -71,7 +71,8 @@ let webpackConfig = {
   },
   plugins: [
     new WechatAppPlugin({
-      //   useDefaultLoader: false,
+      useDefaultLoader: true,
+      fileLoaderExt: ["jpeg", "png"],
       onAdditionalAssets: () => {
         return [path.join("img/webpack-logo2.jpeg")].map(file =>
           path.join(__dirname, "src", file)
