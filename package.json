@@ -4,6 +4,9 @@
     "format": "lerna run format",
     "lint": "eslint --fix  ./packages --ext .js,.ts"
   },
+  "dependencies": {
+    "typescript": "~3.4.5"
+  },
   "devDependencies": {
     "@types/node": "^10.12.2",
     "@typescript-eslint/eslint-plugin": "^1.9.0",
@@ -13,7 +16,6 @@
     "eslint-plugin-prettier": "^3.1.0",
     "lerna": "^3.13.4",
     "prettier": "^1.17.1",
-    "typescript": "^3.4.5",
     "webpack": "^4.30.0",
     "webpack-cli": "^3.3.1"
   }

@@ -65,7 +65,7 @@ class AssetsProcessor {
       ...defaultExts,
       limit: 4 * 1024, //默认4k大小
       outputPath: 'assets/',
-      name: '[name].[ext]',
+      name: '[folder]/[name].[ext]',
       publicPath: (url: string): string => '' + url
     });
     if (!this.issuerResource) {
@@ -141,11 +141,11 @@ class AssetsProcessor {
             limit: this.loaderOptions.limit,
             ...WechatappPlugin.util.fileLoader().options,
             //放入file-loader 的选项
-            name: '[folder]/[name].[ext]',
-            context: issuerResource,
+            name: this.loaderOptions.name,
+            // context: issuerResource,
             outputPath:
               typeof this.loaderOptions.relativeOutputPath !== 'function'
-                ? ''
+                ? this.loaderOptions.outputPath
                 : (url: string): string => {
                     return this.loaderOptions.relativeOutputPath.call(
                       this.loaderContext,
@@ -156,7 +156,7 @@ class AssetsProcessor {
                   },
             publicPath:
               typeof this.loaderOptions.relativePublicPath !== 'function'
-                ? ''
+                ? ''//需要解析成相对于当前issuerResource 在output.path 下的路径
                 : (url: string): string => {
                     return this.loaderOptions.relativePublicPath.call(
                       this.loaderContext,
