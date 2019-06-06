@@ -31,7 +31,7 @@ interface IAssetsLoaderOptions {
   fallback?: (this: loader.LoaderContext, content, map) => any | string;
   fallbackOptions?: { [key: string]: any };
 }
-type TLoaderOptions = loaderUtils.OptionObject & IAssetsLoaderOptions;
+export type TLoaderOptions = loaderUtils.OptionObject & IAssetsLoaderOptions;
 class AssetsProcessor {
   protected issuerResource: string;
   protected loaderOptions: TLoaderOptions;
